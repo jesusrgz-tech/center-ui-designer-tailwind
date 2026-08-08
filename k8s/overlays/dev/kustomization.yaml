@@ -28,4 +28,4 @@ patches:
 
 images:
   - name: ghcr.io/jesusrgz-tech/center-ui-designer-tailwind
-    newTag: latest
+    newTag: develop

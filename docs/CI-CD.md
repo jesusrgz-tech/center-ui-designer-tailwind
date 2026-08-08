@@ -26,7 +26,8 @@ proyecto se auto-hospeda (Jenkins) o se replica en Bitbucket.
 ## 1. Correr la app con Docker en local
 
 ```bash
-# Build de producción servido por nginx en http://localhost:8080
+# Build de producción servido por nginx en http://localhost:8081
+# (puerto configurable con APP_PORT si 8081 también está ocupado)
 docker compose up --build app
 
 # Alternativa: dev server de Vite con hot-reload en http://localhost:5173
@@ -46,42 +47,99 @@ probes de Kubernetes.
 
 ## 2. CI — GitHub Actions (`ci.yml`)
 
-Corre en cada push/PR a `main`: `npm ci` → `npm run lint` → `npm run build`
-(el build incluye typecheck vía `tsc -b`). Sube el `dist/` como artefacto
-para poder inspeccionarlo desde la UI de Actions sin tener que reconstruir
-localmente. No requiere secrets.
+Corre en cada push a `main`/`develop` y en cada PR que apunte a esas dos
+ramas (incluye PRs desde `feature/*`, porque GitHub filtra por rama
+destino, no origen): `npm ci` → `npm run lint` → `npm run build` (el build
+incluye typecheck vía `tsc -b`). Sube el `dist/` como artefacto para poder
+inspeccionarlo desde la UI de Actions sin tener que reconstruir localmente.
+No requiere secrets.
 
 ## 3. CD — GitHub Actions (`cd.yml`)
 
-En cada push a `main` (o tag `vX.Y.Z`), reconstruye y publica la imagen en
-GitHub Container Registry:
+En cada push a `main` o `develop` (o tag `vX.Y.Z`), reconstruye y publica
+la imagen en GitHub Container Registry, con tags distintos según la rama:
 
 ```
+# push a main
 ghcr.io/jesusrgz-tech/center-ui-designer-tailwind:latest
-ghcr.io/jesusrgz-tech/center-ui-designer-tailwind:<sha-corto>
+ghcr.io/jesusrgz-tech/center-ui-designer-tailwind:main
+ghcr.io/jesusrgz-tech/center-ui-designer-tailwind:sha-<corto>
+
+# push a develop
+ghcr.io/jesusrgz-tech/center-ui-designer-tailwind:develop
+ghcr.io/jesusrgz-tech/center-ui-designer-tailwind:sha-<corto>
 ```
+
+`k8s/overlays/prod` usa el tag `latest`, `k8s/overlays/dev` usa el tag
+`develop` — así cada overlay siempre apunta al build correspondiente a su
+rama sin tocar el YAML en cada release.
 
 Usa `secrets.GITHUB_TOKEN` (automático, no hay que crear nada) con permiso
 `packages: write` declarado en el workflow. Este workflow **no hace deploy
 a ningún cluster todavía** — solo deja la imagen publicada. El siguiente
 paso natural cuando haya un cluster real es añadir un job que haga
-`kustomize edit set image ...` + `kubectl apply -k k8s/overlays/prod`,
-autenticándose con un kubeconfig guardado como secret
-(`KUBE_CONFIG_PROD`, por ejemplo).
+`kustomize edit set image ...` + `kubectl apply -k k8s/overlays/{dev,prod}`
+según la rama, autenticándose con un kubeconfig guardado como secret
+(`KUBE_CONFIG_DEV` / `KUBE_CONFIG_PROD`).
 
 Por defecto el paquete en GHCR queda privado. Si vas a tirar de esta imagen
 desde un cluster externo, hay que darle acceso de lectura (o hacerlo
 público desde la configuración del paquete en GitHub).
 
-## 4. Kubernetes (`k8s/`)
+## 4. Estrategia de branches
+
+```
+main               producción.    CD -> tag "latest"  -> k8s/overlays/prod
+ └─ develop        staging.       CD -> tag "develop"  -> k8s/overlays/dev
+     └─ feature/*  una por tarea. Solo CI (vía PR hacia develop)
+```
+
+Por qué este modelo y no trabajar directo sobre `main`:
+
+- **`main` solo recibe merges vía PR**, nunca push directo. Es lo único
+  que dispara el overlay de producción, así que necesita el filtro más
+  estricto: CI en verde obligatorio antes de mergear (branch protection,
+  ver abajo).
+- **`develop` es el punto de integración**: ahí conviven los cambios de
+  varias `feature/*` antes de llegar a producción. Tener un overlay de
+  `dev` en Kubernetes separado del de `prod` significa que puedes ver el
+  resultado real (imagen + manifiestos) sin arriesgar el ambiente que ven
+  los usuarios.
+- **`feature/<nombre>`** aísla cada tarea (por ejemplo, el rediseño a
+  administración estudiantil) de lo que ya funciona en `develop`. Si algo
+  sale mal, se descarta la branch sin tocar nada más. Al terminar, se abre
+  PR hacia `develop` — eso es lo que dispara CI automáticamente por el
+  `pull_request: branches: [develop]` de `ci.yml`.
+
+### Activar branch protection en `main` (y opcionalmente `develop`)
+
+En GitHub no se puede configurar desde aquí (requiere permisos de admin
+del repo vía UI o API autenticada), pero el paso a paso es:
+
+1. Repo en GitHub → **Settings → Branches → Add branch ruleset** (o "Add
+   rule" en la vista clásica de protection rules).
+2. Branch name pattern: `main`.
+3. Marca **Require a pull request before merging** — bloquea el push
+   directo, todo cambio entra por PR.
+4. Marca **Require status checks to pass before merging** y busca el
+   check `Lint, typecheck y build` (el job de `ci.yml`) — sin esto, la
+   branch protection no sirve de nada porque no obliga a que el pipeline
+   pase.
+5. Marca **Require branches to be up to date before merging** para evitar
+   mergear una PR probada contra un `main` viejo.
+6. (Opcional pero recomendado) repite lo mismo para `develop`, así
+   tampoco se le puede hacer push directo — todo entra por PR desde
+   `feature/*`.
+
+## 5. Kubernetes (`k8s/`)
 
 Manifiestos organizados con Kustomize:
 
 ```
 k8s/
   base/            namespace, deployment, service, ingress, configmap
-  overlays/dev/    1 réplica, host dev.tailadmin.local, tag "latest"
-  overlays/prod/   3 réplicas, límites de recursos más altos, host propio
+  overlays/dev/    1 réplica, host dev.tailadmin.local, tag "develop"
+  overlays/prod/   3 réplicas, límites de recursos más altos, tag "latest"
 ```
 
 ### Probar en local con kind
@@ -117,7 +175,7 @@ nginx`). Cambia `spec.rules[0].host` en `k8s/overlays/prod/kustomization.yaml`
 por tu dominio real, y usa cert-manager (no incluido aquí) si quieres TLS
 automático con Let's Encrypt.
 
-## 5. Jenkins y Bitbucket (referencia)
+## 6. Jenkins y Bitbucket (referencia)
 
 `Jenkinsfile` y `bitbucket-pipelines.yml` replican las mismas etapas que
 GitHub Actions (install → lint → build → docker build/push → deploy
@@ -125,7 +183,7 @@ opcional) para que puedas comparar cómo se expresa el mismo pipeline en
 cada herramienta. Ninguno de los dos está conectado a nada ahora mismo;
 son material de estudio, no pipelines activos.
 
-## 6. De aquí a un SaaS multi-tenant
+## 7. De aquí a un SaaS multi-tenant
 
 Cosas a decidir cuando se pase de "template estático" a producto real, sin
 resolverlas todavía en este base:

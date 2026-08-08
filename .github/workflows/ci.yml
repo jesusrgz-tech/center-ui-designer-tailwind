@@ -1,12 +1,14 @@
 name: CI
 
-# Se ejecuta en cada push y pull request. Es la puerta de calidad antes de
-# que cualquier cambio llegue a main: lint, typecheck y build deben pasar.
+# Se ejecuta en cada push a main/develop, y en cada PR que apunte a main o
+# develop (incluye PRs desde feature/*, porque el filtro es por rama
+# destino). Es la puerta de calidad antes de integrar: lint, typecheck y
+# build deben pasar.
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
 
 concurrency:
   group: ci-${{ github.ref }}
