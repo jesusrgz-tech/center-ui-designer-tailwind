@@ -7,7 +7,9 @@ services:
       dockerfile: Dockerfile
     image: tailadmin-react:local
     ports:
-      - "8080:80"
+      # Puerto configurable porque 8080 ya lo usa Jenkins en esta máquina.
+      # Cambiar con: APP_PORT=9000 docker compose up app
+      - "${APP_PORT:-8081}:80"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost/healthz"]
       interval: 30s
