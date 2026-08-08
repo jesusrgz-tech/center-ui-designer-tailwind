@@ -3,17 +3,20 @@ import { Link, useLocation } from "react-router";
 
 // Assume these icons are imported from an icon library
 import {
-  BoxCubeIcon,
   CalenderIcon,
   ChevronDownIcon,
+  DocsIcon,
+  DollarLineIcon,
   GridIcon,
+  GroupIcon,
   HorizontaLDots,
   ListIcon,
-  PageIcon,
+  LockIcon,
   PieChartIcon,
   PlugInIcon,
-  TableIcon,
+  TaskIcon,
   UserCircleIcon,
+  UserIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 import SidebarWidget from "./SidebarWidget";
@@ -25,69 +28,84 @@ type NavItem = {
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
+// Menú de administración estudiantil. Cada módulo apunta a su página
+// placeholder en src/pages/ — ver docs/CI-CD.md para el resto de la
+// infraestructura; esto es la capa de producto sobre esa base.
 const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
     name: "Dashboard",
-    subItems: [{ name: "Ecommerce", path: "/", pro: false }],
+    path: "/",
   },
   {
-    icon: <CalenderIcon />,
-    name: "Calendar",
-    path: "/calendar",
+    icon: <UserIcon />,
+    name: "Estudiantes",
+    path: "/estudiantes",
   },
   {
     icon: <UserCircleIcon />,
-    name: "User Profile",
-    path: "/profile",
+    name: "Profesores",
+    path: "/profesores",
   },
   {
-    name: "Forms",
+    icon: <DocsIcon />,
+    name: "Cursos",
+    path: "/cursos",
+  },
+  {
+    icon: <GroupIcon />,
+    name: "Grupos",
+    path: "/grupos",
+  },
+  {
     icon: <ListIcon />,
-    subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
+    name: "Inscripciones",
+    path: "/inscripciones",
   },
   {
-    name: "Tables",
-    icon: <TableIcon />,
-    subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
+    icon: <TaskIcon />,
+    name: "Calificaciones",
+    path: "/calificaciones",
   },
   {
-    name: "Pages",
-    icon: <PageIcon />,
-    subItems: [
-      { name: "Blank Page", path: "/blank", pro: false },
-      { name: "404 Error", path: "/error-404", pro: false },
-    ],
+    icon: <CalenderIcon />,
+    name: "Horarios",
+    path: "/horarios",
+  },
+  {
+    icon: <DollarLineIcon />,
+    name: "Pagos",
+    path: "/pagos",
+  },
+  {
+    icon: <PieChartIcon />,
+    name: "Reportes",
+    path: "/reportes",
   },
 ];
 
 const othersItems: NavItem[] = [
   {
-    icon: <PieChartIcon />,
-    name: "Charts",
-    subItems: [
-      { name: "Line Chart", path: "/line-chart", pro: false },
-      { name: "Bar Chart", path: "/bar-chart", pro: false },
-    ],
+    icon: <LockIcon />,
+    name: "Usuarios y Roles",
+    path: "/usuarios",
   },
   {
-    icon: <BoxCubeIcon />,
-    name: "UI Elements",
-    subItems: [
-      { name: "Alerts", path: "/alerts", pro: false },
-      { name: "Avatar", path: "/avatars", pro: false },
-      { name: "Badge", path: "/badge", pro: false },
-      { name: "Buttons", path: "/buttons", pro: false },
-      { name: "Images", path: "/images", pro: false },
-      { name: "Videos", path: "/videos", pro: false },
-    ],
+    icon: <CalenderIcon />,
+    name: "Calendario Institucional",
+    path: "/calendar",
+  },
+  {
+    icon: <UserCircleIcon />,
+    name: "Mi Perfil",
+    path: "/profile",
   },
   {
     icon: <PlugInIcon />,
-    name: "Authentication",
+    name: "Autenticación",
     subItems: [
-      { name: "Sign In", path: "/signin", pro: false },
-      { name: "Sign Up", path: "/signup", pro: false },
+      { name: "Iniciar sesión", path: "/signin", pro: false },
+      { name: "Registrarse", path: "/signup", pro: false },
     ],
   },
 ];
@@ -343,7 +361,7 @@ const AppSidebar: React.FC = () => {
                 }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "Menu"
+                  "Menú"
                 ) : (
                   <HorizontaLDots className="size-6" />
                 )}
@@ -359,7 +377,7 @@ const AppSidebar: React.FC = () => {
                 }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "Others"
+                  "Sistema"
                 ) : (
                   <HorizontaLDots />
                 )}
