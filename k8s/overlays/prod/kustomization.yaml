@@ -1,0 +1,40 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: tailadmin-prod
+
+resources:
+  - ../../base
+
+patches:
+  - target:
+      kind: Deployment
+      name: tailadmin-react
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: 500m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: 256Mi
+  - target:
+      kind: Ingress
+      name: tailadmin-react
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: app.tailadmin.example.com
+      - op: replace
+        path: /metadata/annotations/nginx.ingress.kubernetes.io~1ssl-redirect
+        value: "true"
+
+# En CD, el pipeline hace:
+#   kustomize edit set image ghcr.io/...=ghcr.io/...:<sha>
+# antes de "kubectl apply -k k8s/overlays/prod" para desplegar el build
+# recién publicado. El tag de aquí es solo el valor por defecto.
+images:
+  - name: ghcr.io/jesusrgz-tech/center-ui-designer-tailwind
+    newTag: latest

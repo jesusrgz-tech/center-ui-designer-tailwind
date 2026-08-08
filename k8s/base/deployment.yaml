@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tailadmin-react
+  labels:
+    app.kubernetes.io/name: tailadmin-react
+spec:
+  replicas: 2
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tailadmin-react
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: tailadmin-react
+    spec:
+      containers:
+        - name: app
+          # La tag real la fija el overlay/CD (kustomize edit set image),
+          # esto es solo un valor por defecto para "kubectl apply -k" directo.
+          image: ghcr.io/jesusrgz-tech/center-ui-designer-tailwind:latest
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: tailadmin-react-config
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 20
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop: ["ALL"]

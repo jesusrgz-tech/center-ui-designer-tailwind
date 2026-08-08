@@ -1,0 +1,17 @@
+node_modules
+dist
+dist-ssr
+.git
+.github
+*.md
+!README.md
+banner.png
+.vscode
+.idea
+*.log
+.DS_Store
+k8s
+docs
+Jenkinsfile
+bitbucket-pipelines.yml
+docker-compose*.yml

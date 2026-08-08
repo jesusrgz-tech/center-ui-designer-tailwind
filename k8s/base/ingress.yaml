@@ -1,0 +1,22 @@
+# Asume un ingress-controller tipo nginx ya instalado en el cluster
+# (en kind/minikube: `minikube addons enable ingress` o instalar
+# ingress-nginx vía Helm). El host real lo define cada overlay.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tailadmin-react
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: tailadmin.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: tailadmin-react
+                port:
+                  number: 80

@@ -1,0 +1,10 @@
+# Config no sensible de runtime. Hoy la app es un SPA estático sin backend,
+# así que esto es un placeholder pensado para cuando se añada un API
+# (p. ej. VITE_API_BASE_URL inyectada en build-time via CI, o leída por un
+# entrypoint que genere un env.js servido junto al index.html).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tailadmin-react-config
+data:
+  APP_ENV: "production"

@@ -1,0 +1,33 @@
+services:
+  # Build de producción servido por nginx (imagen del Dockerfile).
+  # Uso: docker compose up app
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tailadmin-react:local
+    ports:
+      - "8080:80"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/healthz"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  # Servidor de desarrollo con hot-reload (vite). No usa el Dockerfile de
+  # producción, monta el código fuente como volumen.
+  # Uso: docker compose --profile dev up app-dev
+  app-dev:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "npm ci && npm run dev -- --host 0.0.0.0"
+    volumes:
+      - .:/app
+      - node_modules_dev:/app/node_modules
+    ports:
+      - "5173:5173"
+    profiles:
+      - dev
+
+volumes:
+  node_modules_dev:

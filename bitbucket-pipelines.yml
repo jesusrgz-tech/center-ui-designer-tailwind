@@ -1,0 +1,44 @@
+# Pipeline de referencia para Bitbucket Pipelines: mismas etapas que
+# .github/workflows/ci.yml + cd.yml y que el Jenkinsfile, para comparar
+# sintaxis entre las tres plataformas. El repositorio vive en GitHub, así
+# que este archivo no se ejecuta salvo que el repo se migre o se espeje a
+# Bitbucket; se incluye solo con fines de aprendizaje comparativo.
+
+image: node:22-alpine
+
+definitions:
+  caches:
+    npm: $HOME/.npm
+  steps:
+    - step: &install-lint-build
+        name: Install, lint y build
+        caches:
+          - npm
+        script:
+          - npm ci
+          - npm run lint
+          - npm run build
+        artifacts:
+          - dist/**
+
+    - step: &docker-build-push
+        name: Docker build y push a GHCR
+        image: atlassian/default-image:4
+        services:
+          - docker
+        script:
+          - export IMAGE="ghcr.io/jesusrgz-tech/center-ui-designer-tailwind"
+          - echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+          - docker build -t "$IMAGE:${BITBUCKET_COMMIT:0:7}" -t "$IMAGE:latest" .
+          - docker push "$IMAGE:${BITBUCKET_COMMIT:0:7}"
+          - docker push "$IMAGE:latest"
+
+pipelines:
+  pull-requests:
+    "**":
+      - step: *install-lint-build
+
+  branches:
+    main:
+      - step: *install-lint-build
+      - step: *docker-build-push

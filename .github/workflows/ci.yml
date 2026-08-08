@@ -1,0 +1,43 @@
+name: CI
+
+# Se ejecuta en cada push y pull request. Es la puerta de calidad antes de
+# que cualquier cambio llegue a main: lint, typecheck y build deben pasar.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-build:
+    name: Lint, typecheck y build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build (incluye typecheck vía tsc -b)
+        run: npm run build
+
+      - name: Subir artefacto de build
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7

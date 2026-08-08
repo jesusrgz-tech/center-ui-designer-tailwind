@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Al fijar "namespace" aquí, kustomize renombra automáticamente el recurso
+# Namespace del base (tailadmin -> tailadmin-dev) y setea
+# metadata.namespace en el resto de recursos. No usamos namePrefix para
+# evitar que ambos mecanismos se pisen entre sí.
+namespace: tailadmin-dev
+
+resources:
+  - ../../base
+
+patches:
+  - target:
+      kind: Deployment
+      name: tailadmin-react
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+  - target:
+      kind: Ingress
+      name: tailadmin-react
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: dev.tailadmin.local
+
+images:
+  - name: ghcr.io/jesusrgz-tech/center-ui-designer-tailwind
+    newTag: latest
