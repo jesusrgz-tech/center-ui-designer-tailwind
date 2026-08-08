@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap")
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap")
 layer(base);
 
 @import "tailwindcss";
@@ -7,7 +7,8 @@ layer(base);
 
 @theme {
   --font-*: initial;
-  --font-outfit: Outfit, sans-serif;
+  --font-sans: Manrope, ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
   --breakpoint-*: initial;
   --breakpoint-2xsm: 375px;
@@ -186,8 +187,13 @@ layer(base);
     cursor: pointer;
   }
   body {
-    @apply relative font-normal font-outfit z-1 bg-gray-50;
+    @apply relative font-normal font-sans z-1 bg-gray-50;
   }
+}
+
+@utility font-tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 @utility menu-item {
@@ -195,7 +201,7 @@ layer(base);
 }
 
 @utility menu-item-active {
-  @apply bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400;
+  @apply bg-gray-100 text-gray-900 dark:bg-white/10 dark:text-white;
 }
 
 @utility menu-item-inactive {
@@ -207,7 +213,7 @@ layer(base);
 }
 
 @utility menu-item-icon-active {
-  @apply text-brand-500 dark:text-brand-400;
+  @apply text-gray-900 dark:text-white;
 }
 
 @utility menu-item-icon-size {
@@ -225,7 +231,7 @@ layer(base);
 }
 
 @utility menu-item-arrow-active {
-  @apply rotate-180 text-brand-500 dark:text-brand-400;
+  @apply rotate-180 text-gray-900 dark:text-white;
 }
 
 @utility menu-item-arrow-inactive {
@@ -237,7 +243,7 @@ layer(base);
 }
 
 @utility menu-dropdown-item-active {
-  @apply bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400;
+  @apply bg-gray-100 text-gray-900 dark:bg-white/10 dark:text-white;
 }
 
 @utility menu-dropdown-item-inactive {
