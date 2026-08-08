@@ -1,4 +1,5 @@
 // react plugin for creating vector maps
+import type { CSSProperties } from "react";
 import { VectorMap } from "@react-jvectormap/core";
 import { worldMill } from "@react-jvectormap/world";
 
@@ -6,6 +7,10 @@ import { worldMill } from "@react-jvectormap/world";
 interface CountryMapProps {
   mapColor?: string;
 }
+
+// jvectormap acepta el atributo SVG "r" (radio) en el estilo de los
+// markers, pero no forma parte de CSSProperties estándar.
+type MarkerStyle = CSSProperties & { r?: number };
 
 const CountryMap: React.FC<CountryMapProps> = ({ mapColor }) => {
   return (
@@ -16,7 +21,7 @@ const CountryMap: React.FC<CountryMapProps> = ({ mapColor }) => {
         initial: {
           fill: "#465FFF",
           r: 4, // Custom radius for markers
-        } as any, // Type assertion to bypass strict CSS property checks
+        } as MarkerStyle,
       }}
       markersSelectable={true}
       markers={[
