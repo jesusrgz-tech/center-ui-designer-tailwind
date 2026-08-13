@@ -1,13 +1,15 @@
 name: CD
 
 # Construye y publica la imagen Docker en GitHub Container Registry (GHCR)
-# cada vez que hay un push a main, y en cada tag "vX.Y.Z" para releases.
+# en push a main o develop, y en cada tag "vX.Y.Z" para releases.
+# main    -> tags "latest" + "main" + "sha-<corto>"    -> k8s/overlays/prod
+# develop -> tags "develop" + "sha-<corto>"             -> k8s/overlays/dev
 # No hace deploy automático a ningún cluster todavía: eso se dispara a mano
 # (o desde otro workflow) aplicando los manifiestos de k8s/ con la nueva
 # imagen. Ver docs/CI-CD.md.
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
     tags: ["v*.*.*"]
 
 env:
@@ -55,6 +57,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=sha,format=short
+            type=ref,event=branch
             type=raw,value=latest,enable={{is_default_branch}}
             type=semver,pattern={{version}}
 

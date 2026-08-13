@@ -65,7 +65,7 @@ const CountryMap: React.FC<CountryMapProps> = ({ mapColor }) => {
         initial: {
           fill: mapColor || "#D0D5DD",
           fillOpacity: 1,
-          fontFamily: "Outfit",
+          fontFamily: "Manrope",
           stroke: "none",
           strokeWidth: 0,
           strokeOpacity: 0,

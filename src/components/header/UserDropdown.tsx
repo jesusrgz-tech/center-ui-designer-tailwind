@@ -17,15 +17,15 @@ export default function UserDropdown() {
     <div className="relative">
       <button
         onClick={toggleDropdown}
-        className="flex items-center text-gray-700 dropdown-toggle dark:text-gray-400"
+        className="flex items-center rounded-md py-1 pl-1 pr-2 text-white/90 dropdown-toggle hover:bg-white/10"
       >
-        <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
+        <span className="mr-2.5 overflow-hidden rounded-full h-8 w-8">
           <img src="/images/user/owner.jpg" alt="User" />
         </span>
 
         <span className="block mr-1 font-medium text-theme-sm">Musharof</span>
         <svg
-          className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
+          className={`stroke-white/50 transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""
           }`}
           width="18"
